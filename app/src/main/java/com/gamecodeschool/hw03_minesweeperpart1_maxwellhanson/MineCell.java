@@ -5,10 +5,13 @@ public class MineCell {
     private boolean flagged;
     private boolean revealed;
 
+    private String position;
+
     public MineCell() {
         this.hasMine = false;
         this.flagged = false;
         this.revealed = false;
+        this.setPosition("Unset position");
     }
 
     public boolean hasMine() {
@@ -33,6 +36,14 @@ public class MineCell {
 
     public void setRevealed(boolean revealed) {
         this.revealed = revealed;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
     }
 }
 

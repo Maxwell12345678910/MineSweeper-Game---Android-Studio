@@ -53,16 +53,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //used by other methods to interact with buttons at a particular position
+    private String getPosition(int row, int col) {
+        return String.format("%d_%d", row, col);
+    }
 
     private void initializeMineField() {
+        mineField.clear();//clear the hashmap incase the size changed or its reset game
         //create a number of rows to add to the hashmap
         for (int i = 0; i < rowSize; i++) {
             //create the same number of columns
             for (int j = 0; j < colSize; j++) {
                 //similar to C programming, each int is passed to the first param as secondary params.
                 //Example Cell positions: 0_0, 0_1, 0_2.....9_9
-                String position = String.format("%d_%d", i, j);
-                mineField.put(position, new MineCell());
+                String position = getPosition(i,j);
+                MineCell addMine = new MineCell();
+                addMine.setPosition(position);
+                mineField.put(position, addMine);
             }
         }
     }
@@ -128,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addButtonsGrid(LinearLayout gridLayout) {
+        //This loop creates each row of the grid
         for (int i = 0; i <= rowSize - 1; i++) {
             // Create a horizontal LinearLayout
             LinearLayout horizontalLayout = new LinearLayout(this);
@@ -144,17 +152,30 @@ public class MainActivity extends AppCompatActivity {
             columnTextView.setText(" " + alphabet + "   ");
             horizontalLayout.addView(columnTextView);
 
+            //this loop populates each row in the grid, column by column with buttons
             for (int j = 0; j <= rowSize - 1; j++) {
+                int buttonRow = i;
+                int buttonCol= j;
                 Button button = new Button(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT);
                 params.weight = 1; // Set equal weight for each button to distribute them evenly
                 button.setLayoutParams(params); // Apply layout parameters to button
+
+               //its necesarry to have all this onClick code, but for the logic I moved that to separate methods
+                //called setButtonClickListeners which receive the button as well as its row and col
+                //for some reason though, i had to set these up outside  the onClick method it self, after the
+                //setOnClickListener command
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         button.setBackgroundColor(Color.GREEN);
+                        revealCell(buttonRow,buttonCol);
                     }
+
+
                 });
+                setButtonClickListeners(button, buttonRow, buttonCol);
+
                 button.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
@@ -197,6 +218,27 @@ public class MainActivity extends AppCompatActivity {
         mineCountDisp.setText(mineCountStr);
     }
 
+    private void setButtonClickListeners(Button button, int row, int col) {
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                button.setBackgroundColor(Color.GREEN);
+                revealCell(row,col);
+            }
+        });
+    }
+
+    // Method to reveal a cell
+    public void revealCell(int row, int col) {
+        //get the format we set for positions from earlier for processing in the hashamp
+        String position = getPosition(row, col);
+        //find the cell associated with that string key
+        MineCell cell = mineField.get(position);
+        Log.d("User Revealed.....:","ROW was:" + row+". COl was: " + col
+                +". And cell data's position was: " + cell.getPosition());
+        cell.setRevealed(true);
+    }
+
     public void increaseGrid(View v){
         if(rowSize > 14) {
             v.setClickable(false);
@@ -205,6 +247,8 @@ public class MainActivity extends AppCompatActivity {
         rowSize++;
         colSize++;
         numCells=rowSize*colSize;
+        //everytime the user updates the grid size, we need to remake the mineField Hashmap
+        initializeMineField();
         refreshDisplays();
     }
     public void decreaseGrid(View v){
@@ -215,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
         rowSize--;
         colSize--;
         numCells=rowSize*colSize;
+        initializeMineField();
         refreshDisplays();
     }
     public void increaseMines(View v){
