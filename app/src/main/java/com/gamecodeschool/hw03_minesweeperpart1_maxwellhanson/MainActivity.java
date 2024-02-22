@@ -33,7 +33,17 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    //if we switch to the main activity layout we need to call this method again to have the id's of the
+    //text views and set them
+    public void setInitVars(){
+        //connecting textview displays to their ID's and setting them to default text
+        gridSizeDisp = (TextView) findViewById(R.id.gridSizeDisp);
+        mineCountDisp = (TextView) findViewById(R.id.mineCountDisp);
+        refreshDisplays();
 
+        initializeMineField();
+        Log.d("positions",mineField.toString());
+    }
 
 
 
@@ -42,15 +52,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //connecting textview displays to their ID's and setting them to default text
-        gridSizeDisp = (TextView) findViewById(R.id.gridSizeDisp);
-        mineCountDisp = (TextView) findViewById(R.id.mineCountDisp);
-        refreshDisplays();
-
-        initializeMineField();
-        Log.d("positions",mineField.toString());
-
+        setInitVars();
     }
 
     //used by other methods to interact with buttons at a particular position
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         return String.format("%d_%d", row, col);
     }
 
+    //creates mine cell objects, their positions, and adds them to a hashmap
     private void initializeMineField() {
         mineField.clear();//clear the hashmap incase the size changed or its reset game
         //create a number of rows to add to the hashmap
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 mineField.put(position, addMine);
             }
         }
+        insertMinesIntoMap();
     }
 
     public void displayPlayBoard(View v) {
@@ -165,18 +169,17 @@ public class MainActivity extends AppCompatActivity {
                 //called setButtonClickListeners which receive the button as well as its row and col
                 //for some reason though, i had to set these up outside  the onClick method it self, after the
                 //setOnClickListener command
-                button.setOnClickListener(new View.OnClickListener() {
+                button.setOnClickListener(new View.OnClickListener() { //-----------------------------------CEll Button SHORT click
                     @Override
                     public void onClick(View v) {
                         button.setBackgroundColor(Color.GREEN);
                         revealCell(buttonRow,buttonCol);
                     }
 
-
                 });
-                setButtonClickListeners(button, buttonRow, buttonCol);
+//                setButtonClickListeners(button, buttonRow, buttonCol);
 
-                button.setOnLongClickListener(new View.OnLongClickListener() {
+                button.setOnLongClickListener(new View.OnLongClickListener() {//-----------------------------------CEll Button LONG click
                     @Override
                     public boolean onLongClick(View v) {
                         button.setBackgroundColor(Color.RED);
@@ -206,6 +209,13 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         newGameButton.setLayoutParams(params);
+        newGameButton.setOnClickListener(new View.OnClickListener() { // -------------NEW GAME BUTTON
+            @Override
+            public void onClick(View v) {
+                pressedNewGame();
+            }
+        }
+        );//hook up the method to the button
         horizontalLayoutLast.addView(newGameButton);
         gridLayout.addView(horizontalLayoutLast);
     }
@@ -218,15 +228,6 @@ public class MainActivity extends AppCompatActivity {
         mineCountDisp.setText(mineCountStr);
     }
 
-    private void setButtonClickListeners(Button button, int row, int col) {
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                button.setBackgroundColor(Color.GREEN);
-                revealCell(row,col);
-            }
-        });
-    }
 
     // Method to reveal a cell
     public void revealCell(int row, int col) {
@@ -262,14 +263,37 @@ public class MainActivity extends AppCompatActivity {
         initializeMineField();
         refreshDisplays();
     }
+
+    //still have to add mines in grid generation method, and add a line using that method here
     public void increaseMines(View v){
         mineCount++;
         refreshDisplays();
     }
+    //still have to add mines in grid generation method, and add a line using that method here
+
     public void decreaseMines(View v){
         mineCount--;
         refreshDisplays();
     }
 
+    public void pressedNewGame(){
+        setContentView(R.layout.activity_main);
+        setInitVars();
+    }
+
+    public void insertMinesIntoMap(){
+        //generate random num for col and row and get a concat a position string from that, then access this as a random
+        //mine cell in the map
+        for(int i=0;i<rowSize;i++){
+            int randomSideIndex1 = (int) (Math.random() * (rowSize - 1)) ;int randomSideIndex2 = (int) (Math.random() * (rowSize - 1)) ;
+            String randomPosition = randomSideIndex1 + "_" + randomSideIndex2;
+            Log.d("randomPOS........", "Inserting a mine into position: " + randomPosition);
+
+            //"INSERT THE MINES INTO MAP,
+
+            //HANDLE DUPLICATE STRINGS
+            //use a new map and push all the position strings to it and with each push check if the value is null or not and if it is null then you can push otherwise do i -1 to run the loop again each time a dupe is detected
+        }
+    }
 
 }
