@@ -15,7 +15,8 @@ import android.widget.TextView;
 import android.content.Context;
 import android.widget.Toast;
 import java.util.HashMap;
-
+import java.util.HashSet;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -27,8 +28,9 @@ public class MainActivity extends AppCompatActivity {
     public int numCells = 100;
     public boolean ratioGood = false;
 
-    private HashMap<String, MineCell> mineField = new HashMap<>();
+    private HashMap<String, MineCell> mineField = new HashMap<>();//used to keep track of data for every button in the grid
 
+    private HashSet<String> activeMines = new HashSet<>(); //used to keep track of the positions of active mines only
 
 
 
@@ -40,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         gridSizeDisp = (TextView) findViewById(R.id.gridSizeDisp);
         mineCountDisp = (TextView) findViewById(R.id.mineCountDisp);
         refreshDisplays();
-
         initializeMineField();
         Log.d("positions",mineField.toString());
     }
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         insertMinesIntoMap();
     }
 
+    //triggered when the user clicks the play button
     public void displayPlayBoard(View v) {
         // first do ratio check
         double ratio = (double) mineCount / numCells;
@@ -108,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Create and add the last row for the new game button
         addLastRow(gridLayout);
-
+        //we need to initialize the mineField (which also inserts mines) in this method, otherwise it only happens in onCrate but we need it for new games as well
+        initializeMineField();
         setContentView(gridLayout); // load the display
     }
 
@@ -236,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         //find the cell associated with that string key
         MineCell cell = mineField.get(position);
         Log.d("User Revealed.....:","ROW was:" + row+". COl was: " + col
-                +". And cell data's position was: " + cell.getPosition());
+                +". And cell data's position was: " + cell.getPosition() + ". MINE STATUS: " + cell.hasMine() );
         cell.setRevealed(true);
     }
 
@@ -268,31 +271,49 @@ public class MainActivity extends AppCompatActivity {
     public void increaseMines(View v){
         mineCount++;
         refreshDisplays();
+        insertMinesIntoMap();
     }
     //still have to add mines in grid generation method, and add a line using that method here
 
     public void decreaseMines(View v){
         mineCount--;
         refreshDisplays();
+        insertMinesIntoMap();
     }
+
+//    public void removeMines(View v){
+//        for (MineCell cell : mineField.values()) {        // Iterate over the values of the mineField hashmap
+//            // Set the setMines attribute to false for each MineCell
+//            cell.setMine(false);
+//        }
+//        for (Map.Entry<String, MineCell> entry : mineField.entrySet()) {
+//            String key = entry.getKey();
+//            MineCell cell = entry.getValue();
+//            // Print the hasMine value for each MineCell
+//            System.out.println("MineCell at key " + key + " hasMine: " + cell.hasMine());
+//        }
+//
+//    }
 
     public void pressedNewGame(){
         setContentView(R.layout.activity_main);
         setInitVars();
+        initializeMineField();
     }
 
     public void insertMinesIntoMap(){
-        //generate random num for col and row and get a concat a position string from that, then access this as a random
-        //mine cell in the map
-        for(int i=0;i<rowSize;i++){
-            int randomSideIndex1 = (int) (Math.random() * (rowSize - 1)) ;int randomSideIndex2 = (int) (Math.random() * (rowSize - 1)) ;
-            String randomPosition = randomSideIndex1 + "_" + randomSideIndex2;
-            Log.d("randomPOS........", "Inserting a mine into position: " + randomPosition);
-
-            //"INSERT THE MINES INTO MAP,
-
-            //HANDLE DUPLICATE STRINGS
-            //use a new map and push all the position strings to it and with each push check if the value is null or not and if it is null then you can push otherwise do i -1 to run the loop again each time a dupe is detected
+        activeMines.clear();//reset all mines so we can add new ones easier
+        for(int i=0;i<mineCount;i++){
+            int randomSideIndex1 = (int) (Math.random() * rowSize) ;int randomSideIndex2 = (int) (Math.random() * rowSize) ;
+            String randomPosition = randomSideIndex1 + "_" + randomSideIndex2;//generate random num for col and row and get a concat a position string from that, then access this as a random
+            while(activeMines.contains(randomPosition)){ // this loop handles duplicate positions. So while the set contains the generated postions, create a new one
+                 randomSideIndex1 = (int) (Math.random() * rowSize) ; randomSideIndex2 = (int) (Math.random() * rowSize) ;
+                 randomPosition = randomSideIndex1 + "_" + randomSideIndex2;
+            }
+            Log.d("Insert Random Mine: ", "Inserting a mine into position: " + randomPosition);
+            activeMines.add(randomPosition); //add it to active mines so we keep track of all the mines in one set
+            MineCell mineAtPosition = mineField.get(randomPosition); //fetch the button in the grid at that position
+            mineAtPosition.setMine(true); //insert the mine into that button in the grid
         }
     }
 
