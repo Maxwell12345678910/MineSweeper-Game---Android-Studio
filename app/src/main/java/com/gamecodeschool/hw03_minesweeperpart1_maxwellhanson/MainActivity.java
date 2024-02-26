@@ -14,18 +14,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.content.Context;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
     public TextView gridSizeDisp = null;
     public TextView mineCountDisp = null;
+    public TextView userCountDisplay = null;
     public int rowSize = 10;
     public int colSize = 10;
     public int mineCount = 20;
     public int numCells = 100;
+    public int userCount =20;
     public boolean ratioGood = false;
 
     private HashMap<String, MineCell> mineField = new HashMap<>();//used to keep track of data for every button in the grid
@@ -38,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     //if we switch to the main activity layout we need to call this method again to have the id's of the
     //text views and set them
     public void setInitVars(){
+        userCount = mineCount;
         //connecting textview displays to their ID's and setting them to default text
         gridSizeDisp = (TextView) findViewById(R.id.gridSizeDisp);
         mineCountDisp = (TextView) findViewById(R.id.mineCountDisp);
@@ -141,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
         gridLayout.addView(horizontalLayout2); // Add horizontalLayout2 to the gridLayout
     }
 
+
+    //BUTTONS ADDED HERE--------------------------------------------------onClick METHODS HERE-----------------------------------
     private void addButtonsGrid(LinearLayout gridLayout) {
         //This loop creates each row of the grid
         for (int i = 0; i <= rowSize - 1; i++) {
@@ -175,17 +183,34 @@ public class MainActivity extends AppCompatActivity {
                 button.setOnClickListener(new View.OnClickListener() { //-----------------------------------CEll Button SHORT click
                     @Override
                     public void onClick(View v) {
-                        button.setBackgroundColor(Color.GREEN);
+//                        button.setBackgroundColor(Color.GREEN);
                         revealCell(buttonRow,buttonCol);
+
+                        MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));//get the armed int from revealCell, set the background of the button to that.
+                        int armedCount = cell.getArmedNeighborsCount();
+                        button.setText(String.valueOf(armedCount));
+                        if(cell.hasMine())
+                            button.setBackgroundColor(Color.RED);
+                        else button.setBackgroundColor(Color.GRAY);
                     }
 
                 });
-//                setButtonClickListeners(button, buttonRow, buttonCol);
 
-                button.setOnLongClickListener(new View.OnLongClickListener() {//-----------------------------------CEll Button LONG click
+                button.setOnLongClickListener(new View.OnLongClickListener() {//-----------------------------------CEll Button LONG click------
+                    //DONT FORGET TO MAKE IT SO IF CELL IS REVEALED IT CANT BE FLAGGED
                     @Override
                     public boolean onLongClick(View v) {
-                        button.setBackgroundColor(Color.RED);
+                        MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));
+                        if (cell.isFlagged())//if flagged, set it back to unflagged, otherwise make it yellow
+                        {
+                            cell.setFlagged(false);
+                            button.setBackgroundColor(Color.LTGRAY);
+                            button.setActivated(false);
+                        }
+                        else {
+                            cell.setFlagged(true);
+                            button.setBackgroundColor(Color.YELLOW);
+                        }
                         return true;
                     }
                 });
@@ -204,6 +229,13 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
         horizontalLayoutLast.setGravity(Gravity.CENTER);
+
+        //Create a display for the userCount of mines
+        userCountDisplay = new TextView(this);
+        userCountDisplay.setText(String.valueOf(userCount));
+        horizontalLayoutLast.addView(userCountDisplay);
+
+
         // Create a new game button
         Button newGameButton = new Button(this);
         newGameButton.setText("NEW GAME");
@@ -224,24 +256,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void refreshDisplays(){
-        String rowSizeStr = String.valueOf(rowSize);
+        String rowSizeStr = String.valueOf(rowSize); //These lines update the starting page displays
         String colSizeStr = String.valueOf(colSize);
         String mineCountStr = String.valueOf(mineCount);
         gridSizeDisp.setText(rowSizeStr + " X " + colSizeStr);
         mineCountDisp.setText(mineCountStr);
+        //update the count of mines (not including those flagged by the user) display in the game grid screen
+        userCountDisplay = new TextView(this);
+        userCountDisplay.setText(String.valueOf(userCount));
     }
 
-
-    // Method to reveal a cell
-    public void revealCell(int row, int col) {
-        //get the format we set for positions from earlier for processing in the hashamp
-        String position = getPosition(row, col);
-        //find the cell associated with that string key
-        MineCell cell = mineField.get(position);
-        Log.d("User Revealed.....:","ROW was:" + row+". COl was: " + col
-                +". And cell data's position was: " + cell.getPosition() + ". MINE STATUS: " + cell.hasMine() );
-        cell.setRevealed(true);
-    }
 
     public void increaseGrid(View v){
         if(rowSize > 14) {
@@ -270,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
     //still have to add mines in grid generation method, and add a line using that method here
     public void increaseMines(View v){
         mineCount++;
+        userCount = mineCount;
         refreshDisplays();
         insertMinesIntoMap();
     }
@@ -277,23 +302,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void decreaseMines(View v){
         mineCount--;
+        userCount = mineCount;
         refreshDisplays();
         insertMinesIntoMap();
     }
 
-//    public void removeMines(View v){
-//        for (MineCell cell : mineField.values()) {        // Iterate over the values of the mineField hashmap
-//            // Set the setMines attribute to false for each MineCell
-//            cell.setMine(false);
-//        }
-//        for (Map.Entry<String, MineCell> entry : mineField.entrySet()) {
-//            String key = entry.getKey();
-//            MineCell cell = entry.getValue();
-//            // Print the hasMine value for each MineCell
-//            System.out.println("MineCell at key " + key + " hasMine: " + cell.hasMine());
-//        }
-//
-//    }
+
 
     public void pressedNewGame(){
         setContentView(R.layout.activity_main);
@@ -317,4 +331,80 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public List<String> findNeighbors(String position) {
+        List<String> neighbors = new ArrayList<>();
+
+        // Split the position string into row and column numbers
+        String[] parts = position.split("_");
+        int row = Integer.parseInt(parts[0]);
+        int col = Integer.parseInt(parts[1]);
+
+        // Define offsets for neighboring cells
+        int[][] offsets = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1}, {1, 0}, {1, 1}
+        };
+
+        // Loop through offsets to find neighboring cells
+        for (int[] offset : offsets) {
+            int newRow = row + offset[0]; // row plus the first dimension's offset iterated item
+            int newCol = col + offset[1];//column plus the second dimension's iterated item value
+
+            // Check bounds - if its x/y position is 0-max then we're good
+            if (newRow >= 0 && newRow < rowSize && newCol >= 0 && newCol < colSize) {
+                neighbors.add(newRow + "_" + newCol);                // Add the neighboring cell to the list
+            }
+        }
+        return neighbors;
+    } //
+
+    public List<String> findArmedNeighbors(String position){
+        List<String> armedNeighbors = new ArrayList<>();
+
+        // Split the position string into row and column numbers
+        String[] parts = position.split("_");
+        int row = Integer.parseInt(parts[0]);
+        int col = Integer.parseInt(parts[1]);
+
+        // Define offsets for neighboring cells
+        int[][] offsets = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1}, {1, 0}, {1, 1}
+        };
+
+        // Loop through offsets to find neighboring cells
+        for (int[] offset : offsets) {
+            int newRow = row + offset[0]; // row plus the first dimension's offset iterated item
+            int newCol = col + offset[1];//column plus the second dimension's iterated item value
+            String neighborPosition = newRow + "_" + newCol;
+            MineCell neighborCell = mineField.get(neighborPosition); //get the cell from the map to see if its armed
+            // Check bounds - if its x/y position is 0-max then we're good
+            if (newRow >= 0 && newRow < rowSize && newCol >= 0 && newCol < colSize && neighborCell.hasMine()) {
+
+                armedNeighbors.add(newRow + "_" + newCol);                // Add the neighboring cell to the list
+            }
+        }
+        return armedNeighbors;
+    }
+
+    public void revealCell(int row, int col) {
+        String position = getPosition(row, col);//get the format we set for positions from earlier for processing in the map
+        MineCell cell = mineField.get(position);//find the cell associated with that string key
+        char alphabet = (char) ('A' + (row)); //get the alphabetical value of the row for the log
+        Log.d("User Revealed.....:","ROW was :" + alphabet +". COl number was: " + (col+1)
+                +". And cell data's position was: " + cell.getPosition() + ". MINE STATUS: " + cell.hasMine() );
+
+        List<String> revealedCellNeighbors = findNeighbors(position);
+        cell.setNeighbors(revealedCellNeighbors);
+        Log.d("THIS CELL NEIGHBORS:",cell.getNeighbors().toString() + " ----Remember to add 1 to all coordinates");
+
+        List<String> armed = findArmedNeighbors(position);
+        cell.setArmedNeighbors(armed);
+        Log.d("ARMED NEIGHBORS:",cell.getArmedNeighbors().toString() + " ----Remember to add 1 to all coordinates");
+        Log.d("ARMED COUNT:", String.valueOf(cell.getArmedNeighborsCount()));
+
+        cell.setRevealed(true);
+    }// Method to reveal a cell
 }
