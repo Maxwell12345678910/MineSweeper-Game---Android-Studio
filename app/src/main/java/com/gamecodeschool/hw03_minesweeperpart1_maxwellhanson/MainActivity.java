@@ -201,15 +201,17 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onLongClick(View v) {
                         MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));
-                        if (cell.isFlagged())//if flagged, set it back to unflagged, otherwise make it yellow
+                        if (cell.isFlagged())//if flagged, set it back to unflagged, otherwise make it yellow and flag the cell
                         {
                             cell.setFlagged(false);
                             button.setBackgroundColor(Color.LTGRAY);
                             button.setActivated(false);
+                            userCount++;userCountDisplay.setText(String.valueOf(userCount)); //raise userCount + update its display
                         }
                         else {
                             cell.setFlagged(true);
                             button.setBackgroundColor(Color.YELLOW);
+                            userCount--;    userCountDisplay.setText(String.valueOf(userCount));    //lower userCount + update its display
                         }
                         return true;
                     }
