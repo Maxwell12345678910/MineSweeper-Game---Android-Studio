@@ -289,6 +289,8 @@ public class MainActivity extends AppCompatActivity {
                             for (Map.Entry<String, Button> entry : wrongFlaggedMap.entrySet()) { //sets all wrongly flagged no mine buttons to X
                                 Button btn2 = entry.getValue();
                                 btn2.setText("X");
+                                btn2.setBackgroundColor(Color.YELLOW);
+                                btn2.setTextColor(Color.BLACK);
                             }
                             for(Map.Entry<String,Button> entry : unflaggedMinesMap.entrySet()){
                                 Button btn3 = entry.getValue();
