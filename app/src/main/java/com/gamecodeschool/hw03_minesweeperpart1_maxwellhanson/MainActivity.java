@@ -23,6 +23,7 @@ import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
+    public Button newGameButton;
     public TextView gridSizeDisp = null;
     public TextView mineCountDisp = null;
     public TextView userCountDisplay = null;
@@ -43,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private HashMap <String,Button> unflaggedMinesMap = new HashMap<>();
     private HashMap <String,Button> wrongFlaggedMap = new HashMap<>();
     private HashMap <String,Button> allBtnMap = new HashMap<>();
-
+    private HashMap<String, MineCell> safeCells = new HashMap<>();
+    private HashMap<String,Button> safeButtons = new HashMap<>();
 
 
     //if we switch to the main activity layout we need to call this method again to have the id's of the
@@ -179,9 +181,9 @@ public class MainActivity extends AppCompatActivity {
                 int buttonCol= j;
                 Button button = new Button(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT);
-                params.weight = 1; // Set equal weight for each button to distribute them evenly
+                params.weight = 1;params.setMargins(4, 4,4,4); // Set equal weight for each button to distribute them evenly
                 button.setLayoutParams(params); // Apply layout parameters to button
-
+                button.setBackgroundColor(Color.LTGRAY);
                 allBtnMap.put(getPosition(buttonRow,buttonCol),button); //put all locations of buttons in map
 //                Log.d("allbtnmap",allBtnMap.toString());
 
@@ -192,11 +194,40 @@ public class MainActivity extends AppCompatActivity {
                 button.setOnClickListener(new View.OnClickListener() { //-----------------------------------CEll Button SHORT click
                     @Override
                     public void onClick(View v) {
-                        revealCell(buttonRow,buttonCol);
-
                         MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));//get the armed int from revealCell, set the background of the button to that.
+                        if(cell.isFlagged())
+                            return;
+                        revealCell(buttonRow,buttonCol);
                         int armedCount = cell.getArmedNeighborsCount();
-                        button.setText(String.valueOf(armedCount));
+
+                        if(armedCount == 0) {
+                            String position = getPosition(buttonRow,buttonCol);
+                            // Get all neighbor positions of the current cell
+                            List<String> neighborPositions = findNeighbors(position);
+
+                            // Iterate through the neighbor positions
+                            for (String neighborPosition : neighborPositions) {
+                                // Get the neighbor cell from the mineField map
+                                MineCell neighborCell = mineField.get(neighborPosition);
+
+                                // If the neighbor cell is not revealed, reveal it
+                                if (!neighborCell.isRevealed()) {
+                                    int neighborRow = Integer.parseInt(neighborPosition.split("_")[0]);
+                                    int neighborCol = Integer.parseInt(neighborPosition.split("_")[1]);
+
+                                    // Recursively reveal the neighbor cell and its neighbors if their armed count is also 0
+                                    revealCell(neighborRow, neighborCol);
+
+                                    // Update the button appearance in the UI
+                                    Button neighborButton = allBtnMap.get(neighborPosition);
+                                    neighborButton.setBackgroundColor(Color.GRAY);
+                                    int neighborArmedCount = neighborCell.getArmedNeighborsCount();
+                                    neighborButton.setText(String.valueOf(neighborArmedCount));                                }
+                            }
+                        }
+
+
+
                         if(cell.hasMine()) { // IF USER ENDS THE GAME ---------------------------------------------------------------------
                             Log.d("UNFLAGGED MINES:",unflaggedMinesMap.entrySet().toString());
                             for(Button btn : btnList){ /// loop sets all buttons to disabled
@@ -211,10 +242,19 @@ public class MainActivity extends AppCompatActivity {
                                 btn3.setBackgroundColor(Color.BLACK);
                             }
                             button.setBackgroundColor(Color.RED);
-
+                            newGameButton.setBackgroundColor(Color.BLUE);
                             Log.d("Flagged were:", flaggedBtnList.toString());
                         }
-                        else button.setBackgroundColor(Color.GRAY);
+                        else {
+                            button.setText(String.valueOf(armedCount));
+                            button.setBackgroundColor(Color.GRAY);
+                            if(unflaggedMinesMap.size() == 0 && checkWin()){//if all the mine cells have been flagged and if all the cells without mines have been revealed
+                                newGameButton.setBackgroundColor(Color.GREEN);
+                                for(Button btn : btnList){ /// loop sets all buttons to disabled
+                                    btn.setEnabled(false);
+                                }
+                            }
+                        }
                     }
 
                 });
@@ -224,6 +264,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onLongClick(View v) {
                         MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));
+                        if(cell.isRevealed())
+                            return true;
                         if (cell.isFlagged())//if flagged, set it back to unflagged, otherwise make it yellow and flag the cell
                         {
                             cell.setFlagged(false);
@@ -282,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Create a new game button
-        Button newGameButton = new Button(this);
+        newGameButton = new Button(this);
         newGameButton.setText("NEW GAME");
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -377,11 +419,27 @@ public class MainActivity extends AppCompatActivity {
 
             Button btn23 = allBtnMap.get(randomPosition);
             unflaggedMinesMap.put(randomPosition,btn23);
-            Log.d("unflagged",unflaggedMinesMap.toString());
+        }
+        Log.d("unflagged",unflaggedMinesMap.toString());
 
+        safeCells.clear();
+        for(int rows=0;rows<rowSize;rows++){
+            for(int cols=0;cols<colSize;cols++) {
+                String position = getPosition(rows,cols);
+                MineCell cell2 = mineField.get(position);
+                if(!activeMines.contains(position)) {
+                    safeCells.put(position, cell2);
+                    Button safeBtn = allBtnMap.get(position);
+                    safeButtons.put(position,safeBtn);
+                }
+            }
         }
 
+        Log.d("Safe cells:", safeCells.toString());
+
     }
+
+
 
     public List<String> findNeighbors(String position) {
         List<String> neighbors = new ArrayList<>();
@@ -459,4 +517,13 @@ public class MainActivity extends AppCompatActivity {
 
         cell.setRevealed(true);
     }// Method to reveal a cell
+
+    public boolean checkWin() {
+        for (MineCell cell : safeCells.values()) {
+            if (!cell.isRevealed()) {
+                return false; // If any cell is not revealed, return false
+            }
+        }
+        return true; // If all cells are revealed, return true
+    }
 }
