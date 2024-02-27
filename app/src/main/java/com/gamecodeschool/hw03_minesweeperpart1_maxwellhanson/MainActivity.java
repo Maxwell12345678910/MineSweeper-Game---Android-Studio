@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
     private HashMap <String,Button> unflaggedMinesMap = new HashMap<>();
     private HashMap <String,Button> wrongFlaggedMap = new HashMap<>();
+    private HashMap <String,Button> allBtnMap = new HashMap<>();
 
 
 
@@ -181,6 +182,8 @@ public class MainActivity extends AppCompatActivity {
                 params.weight = 1; // Set equal weight for each button to distribute them evenly
                 button.setLayoutParams(params); // Apply layout parameters to button
 
+                allBtnMap.put(getPosition(buttonRow,buttonCol),button); //put all locations of buttons in map
+//                Log.d("allbtnmap",allBtnMap.toString());
 
                //its necesarry to have all this onClick code, but for the logic I moved that to separate methods
                 //called setButtonClickListeners which receive the button as well as its row and col
@@ -195,14 +198,20 @@ public class MainActivity extends AppCompatActivity {
                         int armedCount = cell.getArmedNeighborsCount();
                         button.setText(String.valueOf(armedCount));
                         if(cell.hasMine()) { // IF USER ENDS THE GAME ---------------------------------------------------------------------
-                            button.setBackgroundColor(Color.RED);
+                            Log.d("UNFLAGGED MINES:",unflaggedMinesMap.entrySet().toString());
                             for(Button btn : btnList){ /// loop sets all buttons to disabled
                                 btn.setEnabled(false);
                             }
-                            for (Map.Entry<String, Button> entry : wrongFlaggedMap.entrySet()) {
+                            for (Map.Entry<String, Button> entry : wrongFlaggedMap.entrySet()) { //sets all wrongly flagged no mine buttons to X
                                 Button btn2 = entry.getValue();
                                 btn2.setText("X");
                             }
+                            for(Map.Entry<String,Button> entry : unflaggedMinesMap.entrySet()){
+                                Button btn3 = entry.getValue();
+                                btn3.setBackgroundColor(Color.BLACK);
+                            }
+                            button.setBackgroundColor(Color.RED);
+
                             Log.d("Flagged were:", flaggedBtnList.toString());
                         }
                         else button.setBackgroundColor(Color.GRAY);
@@ -222,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
                             button.setActivated(false);
                             userCount++;userCountDisplay.setText(String.valueOf(userCount)); //raise userCount + update its display
                             flaggedBtnList.remove(cell.getPosition());wrongFlaggedMap.remove(cell.getPosition());
+                            if(cell.hasMine())
+                                unflaggedMinesMap.put(cell.getPosition(),button);
                         }
                         else {
                             cell.setFlagged(true);
@@ -230,16 +241,28 @@ public class MainActivity extends AppCompatActivity {
                             flaggedBtnList.put(cell.getPosition(),button);
                             if(!cell.hasMine())
                                 wrongFlaggedMap.put(cell.getPosition(), button);
-
+                            else unflaggedMinesMap.remove(cell.getPosition());
                         }
                         return true;
                     }
                 });
                 horizontalLayout.addView(button); // Add button to horizontal layout
                 btnList.add(button);
+//                MineCell cellArmed = mineField.get(getPosition(buttonRow,buttonCol));
+//                if(cellArmed.hasMine()) {
+//                    Log.d("adding to unflaggedMine", cellArmed.getPosition());
+//                    unflaggedMinesMap.put(cellArmed.getPosition(), button);
+//                }
+
             }
 
             gridLayout.addView(horizontalLayout);
+        }
+
+        for (Map.Entry<String, Button> entry : allBtnMap.entrySet()) {
+            String position = entry.getKey();
+            Button btn = entry.getValue();
+            Log.d("Button Added to Map", "Position: " + position + ", Button: " + btn.toString());
         }
     }
 
@@ -338,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void insertMinesIntoMap(){
+        unflaggedMinesMap.clear();
         activeMines.clear();//reset all mines so we can add new ones easier
         for(int i=0;i<mineCount;i++){
             int randomSideIndex1 = (int) (Math.random() * rowSize) ;int randomSideIndex2 = (int) (Math.random() * rowSize) ;
@@ -349,8 +373,14 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Insert Random Mine: ", "Inserting a mine into position: " + randomPosition);
             activeMines.add(randomPosition); //add it to active mines so we keep track of all the mines in one set
             MineCell mineAtPosition = mineField.get(randomPosition); //fetch the button in the grid at that position
-            mineAtPosition.setMine(true); //insert the mine into that button in the grid
+            mineAtPosition.setMine(true); //set the cell as having a mine
+
+            Button btn23 = allBtnMap.get(randomPosition);
+            unflaggedMinesMap.put(randomPosition,btn23);
+            Log.d("unflagged",unflaggedMinesMap.toString());
+
         }
+
     }
 
     public List<String> findNeighbors(String position) {
