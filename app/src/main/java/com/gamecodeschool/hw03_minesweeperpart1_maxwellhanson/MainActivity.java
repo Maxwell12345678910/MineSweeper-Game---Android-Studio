@@ -50,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, MineCell> safeCells = new HashMap<>();
     private HashMap<String,Button> safeButtons = new HashMap<>();
 
-    private boolean gameStarted = false;
-    
+
 
 
     //if we switch to the main activity layout we need to call this method again to have the id's of the
@@ -273,6 +272,9 @@ public class MainActivity extends AppCompatActivity {
                                             neighborButton.setTextColor(Color.LTGRAY);
                                             break;
                                     }
+
+                                    if(neighborArmedCount == 0)
+                                        revealNeighborsRecursive(neighborRow,neighborCol);
                                 }
                             }
                         }
@@ -298,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         else {
                             button.setText(String.valueOf(armedCount));
+                            //set colors of clicked cell
                             switch (armedCount) {
                                 case 0:
                                     break;
@@ -656,7 +659,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         timer.start();
-        gameStarted = true;
     }
 
     private void stopTimer() {
@@ -664,4 +666,42 @@ public class MainActivity extends AppCompatActivity {
             timer.cancel();
         }
     }
+
+    private void revealNeighborsRecursive(int row, int col) {
+        // Get the position of the current cell
+        String position = getPosition(row, col);
+        // Get all neighbor positions of the current cell
+        List<String> neighborPositions = findNeighbors(position);
+
+        // Iterate through the neighbor positions
+        for (String neighborPosition : neighborPositions) {
+            // Get the neighbor cell from the mineField map
+            MineCell neighborCell = mineField.get(neighborPosition);
+
+            // If the neighbor cell is not revealed, reveal it
+            if (!neighborCell.isRevealed()) {
+                int neighborRow = Integer.parseInt(neighborPosition.split("_")[0]);
+                int neighborCol = Integer.parseInt(neighborPosition.split("_")[1]);
+
+                // Recursively reveal the neighbor cell and its neighbors if their armed count is also 0
+                revealCell(neighborRow, neighborCol);
+
+                // Update the button appearance in the UI
+                Button neighborButton = allBtnMap.get(neighborPosition);
+                neighborButton.setBackgroundColor(Color.GRAY);
+                int neighborArmedCount = neighborCell.getArmedNeighborsCount();
+                neighborButton.setText(String.valueOf(neighborArmedCount));
+
+                // If the neighbor has no armed neighbors, continue revealing its neighbors
+                if (neighborArmedCount == 0) {
+                    // Call the same method recursively to reveal the neighbor's neighbors
+                    // This will continue until all neighboring cells with no armed neighbors are revealed
+                    // and their neighbors are also revealed if they have no armed neighbors
+                    revealNeighborsRecursive(neighborRow, neighborCol);
+                }
+            }
+        }
+    }
+
+
 }
