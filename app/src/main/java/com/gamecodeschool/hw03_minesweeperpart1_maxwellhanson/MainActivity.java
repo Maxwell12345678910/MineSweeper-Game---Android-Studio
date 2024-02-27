@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
     private HashSet<String> activeMines = new HashSet<>(); //used to keep track of the positions of active mines only
 
+    private List <Button> btnList = new ArrayList<>();
+    private HashMap <String,Button> flaggedBtnList = new HashMap<>();
 
 
 
@@ -183,14 +185,18 @@ public class MainActivity extends AppCompatActivity {
                 button.setOnClickListener(new View.OnClickListener() { //-----------------------------------CEll Button SHORT click
                     @Override
                     public void onClick(View v) {
-//                        button.setBackgroundColor(Color.GREEN);
                         revealCell(buttonRow,buttonCol);
 
                         MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));//get the armed int from revealCell, set the background of the button to that.
                         int armedCount = cell.getArmedNeighborsCount();
                         button.setText(String.valueOf(armedCount));
-                        if(cell.hasMine())
+                        if(cell.hasMine()) { // IF USER ENDS THE GAME ---------------------------------------------------------------------
                             button.setBackgroundColor(Color.RED);
+                            for(Button btn : btnList){ /// loop sets all buttons to disabled
+                                btn.setEnabled(false);
+                            }
+                            Log.d("Flagged were:", flaggedBtnList.toString());
+                        }
                         else button.setBackgroundColor(Color.GRAY);
                     }
 
@@ -207,16 +213,19 @@ public class MainActivity extends AppCompatActivity {
                             button.setBackgroundColor(Color.LTGRAY);
                             button.setActivated(false);
                             userCount++;userCountDisplay.setText(String.valueOf(userCount)); //raise userCount + update its display
+                            flaggedBtnList.remove(cell.getPosition());
                         }
                         else {
                             cell.setFlagged(true);
                             button.setBackgroundColor(Color.YELLOW);
                             userCount--;    userCountDisplay.setText(String.valueOf(userCount));    //lower userCount + update its display
+                            flaggedBtnList.put(cell.getPosition(),button);
                         }
                         return true;
                     }
                 });
                 horizontalLayout.addView(button); // Add button to horizontal layout
+                btnList.add(button);
             }
 
             gridLayout.addView(horizontalLayout);
