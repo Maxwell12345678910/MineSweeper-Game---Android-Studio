@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                 allBtnMap.put(getPosition(buttonRow,buttonCol),button); //put all locations of buttons in map
 //                Log.d("allbtnmap",allBtnMap.toString());
 
-               //its necesarry to have all this onClick code, but for the logic I moved that to separate methods
+                //its necesarry to have all this onClick code, but for the logic I moved that to separate methods
                 //called setButtonClickListeners which receive the button as well as its row and col
                 //for some reason though, i had to set these up outside  the onClick method it self, after the
                 //setOnClickListener command
@@ -515,8 +515,8 @@ public class MainActivity extends AppCompatActivity {
             int randomSideIndex1 = (int) (Math.random() * rowSize) ;int randomSideIndex2 = (int) (Math.random() * rowSize) ;
             String randomPosition = randomSideIndex1 + "_" + randomSideIndex2;//generate random num for col and row and get a concat a position string from that, then access this as a random
             while(activeMines.contains(randomPosition)){ // this loop handles duplicate positions. So while the set contains the generated postions, create a new one
-                 randomSideIndex1 = (int) (Math.random() * rowSize) ; randomSideIndex2 = (int) (Math.random() * rowSize) ;
-                 randomPosition = randomSideIndex1 + "_" + randomSideIndex2;
+                randomSideIndex1 = (int) (Math.random() * rowSize) ; randomSideIndex2 = (int) (Math.random() * rowSize) ;
+                randomPosition = randomSideIndex1 + "_" + randomSideIndex2;
             }
             Log.d("Insert Random Mine: ", "Inserting a mine into position: " + randomPosition);
             activeMines.add(randomPosition); //add it to active mines so we keep track of all the mines in one set
@@ -693,6 +693,50 @@ public class MainActivity extends AppCompatActivity {
                 neighborButton.setBackgroundColor(Color.GRAY);
                 int neighborArmedCount = neighborCell.getArmedNeighborsCount();
                 neighborButton.setText(String.valueOf(neighborArmedCount));
+                switch (neighborArmedCount) {
+                    case 0:
+                        break;
+                    case 1:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.BLUE);
+                        break;
+
+                    case 2:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.GREEN);
+                        break;
+
+                    case 3:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.RED);
+                        break;
+
+                    case 4:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.rgb(0, 0, 139)); // Dark Blue
+                        break;
+
+                    case 5:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.rgb(165, 42, 42)); //Brown
+                        break;
+
+                    case 6:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.CYAN);
+                        break;
+
+                    case 7:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.BLACK);
+                        break;
+
+                    case 8:
+                        neighborButton.setText(String.valueOf(neighborArmedCount));
+                        neighborButton.setTextColor(Color.LTGRAY);
+                        break;
+                }
+
 
                 // If the neighbor has no armed neighbors, continue revealing its neighbors
                 if (neighborArmedCount == 0) {
