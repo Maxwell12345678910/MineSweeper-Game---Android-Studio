@@ -40,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private List <Button> btnList = new ArrayList<>();
     private HashMap <String,Button> flaggedBtnList = new HashMap<>();
 
+    private HashMap <String,Button> unflaggedMinesMap = new HashMap<>();
+    private HashMap <String,Button> wrongFlaggedMap = new HashMap<>();
+
 
 
     //if we switch to the main activity layout we need to call this method again to have the id's of the
@@ -178,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 params.weight = 1; // Set equal weight for each button to distribute them evenly
                 button.setLayoutParams(params); // Apply layout parameters to button
 
+
                //its necesarry to have all this onClick code, but for the logic I moved that to separate methods
                 //called setButtonClickListeners which receive the button as well as its row and col
                 //for some reason though, i had to set these up outside  the onClick method it self, after the
@@ -194,6 +198,10 @@ public class MainActivity extends AppCompatActivity {
                             button.setBackgroundColor(Color.RED);
                             for(Button btn : btnList){ /// loop sets all buttons to disabled
                                 btn.setEnabled(false);
+                            }
+                            for (Map.Entry<String, Button> entry : wrongFlaggedMap.entrySet()) {
+                                Button btn2 = entry.getValue();
+                                btn2.setText("X");
                             }
                             Log.d("Flagged were:", flaggedBtnList.toString());
                         }
@@ -213,13 +221,16 @@ public class MainActivity extends AppCompatActivity {
                             button.setBackgroundColor(Color.LTGRAY);
                             button.setActivated(false);
                             userCount++;userCountDisplay.setText(String.valueOf(userCount)); //raise userCount + update its display
-                            flaggedBtnList.remove(cell.getPosition());
+                            flaggedBtnList.remove(cell.getPosition());wrongFlaggedMap.remove(cell.getPosition());
                         }
                         else {
                             cell.setFlagged(true);
                             button.setBackgroundColor(Color.YELLOW);
                             userCount--;    userCountDisplay.setText(String.valueOf(userCount));    //lower userCount + update its display
                             flaggedBtnList.put(cell.getPosition(),button);
+                            if(!cell.hasMine())
+                                wrongFlaggedMap.put(cell.getPosition(), button);
+
                         }
                         return true;
                     }
