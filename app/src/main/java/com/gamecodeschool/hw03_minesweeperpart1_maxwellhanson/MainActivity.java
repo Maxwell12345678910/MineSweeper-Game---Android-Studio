@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addLastRow(LinearLayout gridLayout) {
-        //creating the last row for the new game button, timer, and unflagged mine count
+        // Creating the last row for the new game button, timer, and unflagged mine count
         LinearLayout horizontalLayoutLast = new LinearLayout(this);
         horizontalLayoutLast.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -317,30 +317,39 @@ public class MainActivity extends AppCompatActivity {
         ));
         horizontalLayoutLast.setGravity(Gravity.CENTER);
 
-        //Create a display for the userCount of mines
+        // Create a display for the userCount of mines
         userCountDisplay = new TextView(this);
         userCountDisplay.setText(String.valueOf(userCount));
         horizontalLayoutLast.addView(userCountDisplay);
 
-
         // Create a new game button
         newGameButton = new Button(this);
         newGameButton.setText("NEW GAME");
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+
+        // Set margins for the button
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        newGameButton.setLayoutParams(params);
+        buttonParams.setMargins(200, 0, 180, 0); // Adjust margins as needed
+        newGameButton.setLayoutParams(buttonParams);
+
         newGameButton.setOnClickListener(new View.OnClickListener() { // -------------NEW GAME BUTTON
             @Override
             public void onClick(View v) {
                 pressedNewGame();
             }
-        }
-        );//hook up the method to the button
+        });
         horizontalLayoutLast.addView(newGameButton);
+
+        // Create a display for the timer
+        TextView timerDisp = new TextView(this);
+        timerDisp.setText("0:00:00");
+        horizontalLayoutLast.addView(timerDisp);
+
         gridLayout.addView(horizontalLayoutLast);
     }
+
 
     public void refreshDisplays(){
         String rowSizeStr = String.valueOf(rowSize); //These lines update the starting page displays
