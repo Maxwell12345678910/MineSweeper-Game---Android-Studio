@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
+    private CountDownTimer timer;
     public Button newGameButton;
     public TextView gridSizeDisp = null;
     public TextView mineCountDisp = null;
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     public int numCells = 100;
     public int userCount =20;
     public boolean ratioGood = false;
+    TextView timerDisp;
 
     private HashMap<String, MineCell> mineField = new HashMap<>();//used to keep track of data for every button in the grid
 
@@ -46,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
     private HashMap <String,Button> allBtnMap = new HashMap<>();
     private HashMap<String, MineCell> safeCells = new HashMap<>();
     private HashMap<String,Button> safeButtons = new HashMap<>();
+
+    private boolean gameStarted = false;
+    
 
 
     //if we switch to the main activity layout we need to call this method again to have the id's of the
@@ -113,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        startTimer();
         LinearLayout gridLayout = new LinearLayout(this);
         gridLayout.setOrientation(LinearLayout.VERTICAL);
 
@@ -222,7 +229,51 @@ public class MainActivity extends AppCompatActivity {
                                     Button neighborButton = allBtnMap.get(neighborPosition);
                                     neighborButton.setBackgroundColor(Color.GRAY);
                                     int neighborArmedCount = neighborCell.getArmedNeighborsCount();
-                                    neighborButton.setText(String.valueOf(neighborArmedCount));                                }
+                                    neighborButton.setText(String.valueOf(neighborArmedCount));
+                                    switch (neighborArmedCount) {
+                                        case 0:
+                                            break;
+                                        case 1:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.BLUE);
+                                            break;
+
+                                        case 2:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.GREEN);
+                                            break;
+
+                                        case 3:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.RED);
+                                            break;
+
+                                        case 4:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.rgb(0, 0, 139)); // Dark Blue
+                                            break;
+
+                                        case 5:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.rgb(165, 42, 42)); //Brown
+                                            break;
+
+                                        case 6:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.CYAN);
+                                            break;
+
+                                        case 7:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.BLACK);
+                                            break;
+
+                                        case 8:
+                                            neighborButton.setText(String.valueOf(neighborArmedCount));
+                                            neighborButton.setTextColor(Color.LTGRAY);
+                                            break;
+                                    }
+                                }
                             }
                         }
 
@@ -247,6 +298,50 @@ public class MainActivity extends AppCompatActivity {
                         }
                         else {
                             button.setText(String.valueOf(armedCount));
+                            switch (armedCount) {
+                                case 0:
+                                    break;
+                                case 1:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.BLUE);
+                                    break;
+
+                                case 2:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.GREEN);
+                                    break;
+
+                                case 3:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.RED);
+                                    break;
+
+                                case 4:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.rgb(0, 0, 139)); // Dark Blue
+                                    break;
+
+                                case 5:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.rgb(165, 42, 42)); //Brown
+                                    break;
+
+                                case 6:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.CYAN);
+                                    break;
+
+                                case 7:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.BLACK);
+                                    break;
+
+                                case 8:
+                                    button.setText(String.valueOf(armedCount));
+                                    button.setTextColor(Color.LTGRAY);
+                                    break;
+                            }
+
                             button.setBackgroundColor(Color.GRAY);
                             if(unflaggedMinesMap.size() == 0 && checkWin()){//if all the mine cells have been flagged and if all the cells without mines have been revealed
                                 newGameButton.setBackgroundColor(Color.GREEN);
@@ -290,11 +385,7 @@ public class MainActivity extends AppCompatActivity {
                 });
                 horizontalLayout.addView(button); // Add button to horizontal layout
                 btnList.add(button);
-//                MineCell cellArmed = mineField.get(getPosition(buttonRow,buttonCol));
-//                if(cellArmed.hasMine()) {
-//                    Log.d("adding to unflaggedMine", cellArmed.getPosition());
-//                    unflaggedMinesMap.put(cellArmed.getPosition(), button);
-//                }
+
 
             }
 
@@ -338,12 +429,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 pressedNewGame();
+                stopTimer();
             }
         });
         horizontalLayoutLast.addView(newGameButton);
 
         // Create a display for the timer
-        TextView timerDisp = new TextView(this);
+        timerDisp = new TextView(this);
         timerDisp.setText("0:00:00");
         horizontalLayoutLast.addView(timerDisp);
 
@@ -534,5 +626,42 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true; // If all cells are revealed, return true
+    }
+
+
+    private void startTimer() {
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        timer = new CountDownTimer(Long.MAX_VALUE, 1000) {
+            long totalSeconds = 0;
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                totalSeconds++;
+
+                long hours = totalSeconds / 3600;
+                long minutes = (totalSeconds % 3600) / 60;
+                long seconds = totalSeconds % 60;
+
+                String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                timerDisp.setText(time);
+            }
+
+            @Override
+            public void onFinish() {
+                // Timer finished (not applicable in this case)
+            }
+        };
+
+        timer.start();
+        gameStarted = true;
+    }
+
+    private void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 }
