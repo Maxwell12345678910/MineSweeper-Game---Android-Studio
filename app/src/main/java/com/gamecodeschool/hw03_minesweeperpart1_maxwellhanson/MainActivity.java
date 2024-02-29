@@ -201,8 +201,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         MineCell cell = mineField.get(getPosition(buttonRow,buttonCol));//get the armed int from revealCell, set the background of the button to that.
-                        if(cell.isFlagged())
-                            return;
+                        if(cell.isFlagged()) //flagged cells still get revealed on short clicks
+                            cell.setFlagged(false);
+
                         revealCell(buttonRow,buttonCol);
                         int armedCount = cell.getArmedNeighborsCount();
 
@@ -221,8 +222,8 @@ public class MainActivity extends AppCompatActivity {
                                     int neighborRow = Integer.parseInt(neighborPosition.split("_")[0]);
                                     int neighborCol = Integer.parseInt(neighborPosition.split("_")[1]);
 
-                                    // Recursively reveal the neighbor cell and its neighbors if their armed count is also 0
                                     revealCell(neighborRow, neighborCol);
+
 
                                     // Update the button appearance in the UI
                                     Button neighborButton = allBtnMap.get(neighborPosition);
