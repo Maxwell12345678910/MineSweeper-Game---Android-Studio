@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HW03_MineSweeperPart1_MaxwellHanson"
+rootProject.name = "MineSweeper3 HW5"
 include(":app")
  

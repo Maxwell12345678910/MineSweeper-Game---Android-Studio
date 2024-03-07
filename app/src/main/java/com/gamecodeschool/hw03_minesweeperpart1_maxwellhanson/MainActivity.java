@@ -2,13 +2,17 @@ package com.gamecodeschool.hw03_minesweeperpart1_maxwellhanson;
 
 import androidx.annotation.ColorInt;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
 
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -23,19 +27,24 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NewGameListenerInterface{
     private CountDownTimer timer;
     public Button newGameButton;
     public TextView gridSizeDisp = null;
     public TextView mineCountDisp = null;
     public TextView userCountDisplay = null;
+    public TextView rank1 = null;
+    private boolean gameFinished = false;
     public int rowSize = 10;
     public int colSize = 10;
     public int mineCount = 20;
     public int numCells = 100;
     public int userCount =20;
+    public int currentScore;
     public boolean ratioGood = false;
     TextView timerDisp;
+    TextView runningScoreDisp;
+
 
     private HashMap<String, MineCell> mineField = new HashMap<>();//used to keep track of data for every button in the grid
 
@@ -49,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private HashMap <String,Button> allBtnMap = new HashMap<>();
     private HashMap<String, MineCell> safeCells = new HashMap<>();
     private HashMap<String,Button> safeButtons = new HashMap<>();
-
+    public UserSession user;
+    public UserSession[] top5List = new UserSession[5]; //creates a UserSession array with 5 slots
 
 
 
@@ -64,10 +74,6 @@ public class MainActivity extends AppCompatActivity {
         initializeMineField();
         Log.d("positions",mineField.toString());
     }
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,12 +81,10 @@ public class MainActivity extends AppCompatActivity {
         setInitVars();
     }
 
-    //used by other methods to interact with buttons at a particular position
     private String getPosition(int row, int col) {
         return String.format("%d_%d", row, col);
-    }
+    }    //used by other methods to interact with buttons at a particular position
 
-    //creates mine cell objects, their positions, and adds them to a hashmap
     private void initializeMineField() {
         mineField.clear();//clear the hashmap incase the size changed or its reset game
         //create a number of rows to add to the hashmap
@@ -96,15 +100,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         insertMinesIntoMap();
-    }
+    }    //creates mine cell objects, their positions, and adds them to a hashmap
 
-    //triggered when the user clicks the play button
     public void displayPlayBoard(View v) {
         // first do ratio check
         double ratio = (double) mineCount / numCells;
-        if (ratio >= .1 && ratio <= .3)
-            ratioGood = true;
-        else ratioGood = false;
+        ratioGood = ratio >= .1 && ratio <= .3;
         if (!ratioGood) {
             if (ratio < .1) {
                 long requiredIncreaseMines = (long) Math.ceil(numCells * 0.1); // Smallest whole number mineCount for ratio >= 0.1
@@ -118,7 +119,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        startTimer();
+        startTimer();//start the Timer
+
+        currentScore = (rowSize*rowSize) + mineCount; //initialize value for current score
+
+
+
         LinearLayout gridLayout = new LinearLayout(this);
         gridLayout.setOrientation(LinearLayout.VERTICAL);
 
@@ -133,8 +139,7 @@ public class MainActivity extends AppCompatActivity {
         //we need to initialize the mineField (which also inserts mines) in this method, otherwise it only happens in onCrate but we need it for new games as well
         initializeMineField();
         setContentView(gridLayout); // load the display
-    }
-
+    }    //triggered when the user clicks the play button
     private void addTextLabelsRow(LinearLayout gridLayout) {
         // Create a horizontal LinearLayout for the text for the columns
         LinearLayout horizontalLayout2 = new LinearLayout(this);
@@ -160,9 +165,6 @@ public class MainActivity extends AppCompatActivity {
 
         gridLayout.addView(horizontalLayout2); // Add horizontalLayout2 to the gridLayout
     }
-
-
-    //BUTTONS ADDED HERE--------------------------------------------------onClick METHODS HERE-----------------------------------
     private void addButtonsGrid(LinearLayout gridLayout) {
         //This loop creates each row of the grid
         for (int i = 0; i <= rowSize - 1; i++) {
@@ -282,7 +284,9 @@ public class MainActivity extends AppCompatActivity {
 
 
                         if(cell.hasMine()) { // IF USER ENDS THE GAME ---------------------------------------------------------------------
-                            Log.d("UNFLAGGED MINES:",unflaggedMinesMap.entrySet().toString());
+//                            Log.d("UNFLAGGED MINES:",unflaggedMinesMap.entrySet().toString());//                            Log.d("Flagged were:", flaggedBtnList.toString());
+                            gameFinished = true;
+                            stopTimer();
                             for(Button btn : btnList){ /// loop sets all buttons to disabled
                                 btn.setEnabled(false);
                             }
@@ -298,7 +302,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                             button.setBackgroundColor(Color.RED);
                             newGameButton.setBackgroundColor(Color.BLUE);
-                            Log.d("Flagged were:", flaggedBtnList.toString());
                         }
                         else {
                             button.setText(String.valueOf(armedCount));
@@ -350,6 +353,7 @@ public class MainActivity extends AppCompatActivity {
                             button.setBackgroundColor(Color.GRAY);
                             if(unflaggedMinesMap.size() == 0 && checkWin()){//if all the mine cells have been flagged and if all the cells without mines have been revealed
                                 newGameButton.setBackgroundColor(Color.GREEN);
+                                stopTimer(); gameFinished = true;
                                 for(Button btn : btnList){ /// loop sets all buttons to disabled
                                     btn.setEnabled(false);
                                 }
@@ -402,8 +406,7 @@ public class MainActivity extends AppCompatActivity {
             Button btn = entry.getValue();
             Log.d("Button Added to Map", "Position: " + position + ", Button: " + btn.toString());
         }
-    }
-
+    }    //---------------------------------------------------------GRID GENERATION-----------------------------------
     private void addLastRow(LinearLayout gridLayout) {
         // Creating the last row for the new game button, timer, and unflagged mine count
         LinearLayout horizontalLayoutLast = new LinearLayout(this);
@@ -433,33 +436,57 @@ public class MainActivity extends AppCompatActivity {
         newGameButton.setOnClickListener(new View.OnClickListener() { // -------------NEW GAME BUTTON
             @Override
             public void onClick(View v) {
-                pressedNewGame();
-                stopTimer();
+                if(!gameFinished){
+                    NewGameVerifyDialog boxMsg = new NewGameVerifyDialog(MainActivity.this);
+                    boxMsg.show(getSupportFragmentManager(),
+                            "newGameDialog");
+                }
+                else { //if the game is finished, stop the timer. for now we are going to stop the pressedNewGame method until we can add it to the okay button aon the dialog (probs need another interface similar to newgamelistener)
+//                    pressedNewGame();
+                    stopTimer();
+                    user = new UserSession("???",currentScore);//Create the UserSession, set the user's score
+                    // Display the score dialog
+                    DialogFragment scoreDialog = new DialogShowScores(user,top5List); //send the top5 list array as well as the
+                    scoreDialog.show(getSupportFragmentManager(), "scoreBoardDialog");
+                }
             }
+
         });
+
         horizontalLayoutLast.addView(newGameButton);
 
         // Create a display for the timer
         timerDisp = new TextView(this);
-        timerDisp.setText("0:00:00");
-        horizontalLayoutLast.addView(timerDisp);
+        //Create the display for the running score (decreases by 1 every sixseconds);
+        runningScoreDisp = new TextView(this);
+        runningScoreDisp.setText("Empty");
+
+        //create layout params for the runningscore display
+        LinearLayout.LayoutParams runningScoreParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        runningScoreParams.setMargins(60,0,60,0);
+        runningScoreDisp.setLayoutParams(runningScoreParams);
+
+
+        //add both the timer and running score displays to the last row
+        horizontalLayoutLast.addView(timerDisp);horizontalLayoutLast.addView(runningScoreDisp);
 
         gridLayout.addView(horizontalLayoutLast);
     }
-
-
     public void refreshDisplays(){
         String rowSizeStr = String.valueOf(rowSize); //These lines update the starting page displays
         String colSizeStr = String.valueOf(colSize);
         String mineCountStr = String.valueOf(mineCount);
         gridSizeDisp.setText(rowSizeStr + " X " + colSizeStr);
         mineCountDisp.setText(mineCountStr);
-        //update the count of mines (not including those flagged by the user) display in the game grid screen
+
+        //we cant set running score display in here because the display doesnt exist until the grid display is made in addLastRow
+
         userCountDisplay = new TextView(this);
-        userCountDisplay.setText(String.valueOf(userCount));
+        userCountDisplay.setText(String.valueOf(userCount));//update the count of mines (not including those flagged by the user) display in the game grid screen
+
     }
-
-
     public void increaseGrid(View v){
         if(rowSize > 14) {
             v.setClickable(false);
@@ -503,9 +530,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void pressedNewGame(){
+        gameFinished = false;
         setContentView(R.layout.activity_main);
         setInitVars();
         initializeMineField();
+        Log.d("top 5 list :" , top5List.toString() );
     }
 
     public void insertMinesIntoMap(){
@@ -652,6 +681,12 @@ public class MainActivity extends AppCompatActivity {
 
                 String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
                 timerDisp.setText(time);
+
+                if((seconds%6) == 0 && currentScore>0) { //decrement the score by a point every 6 seconds, when the score is 0 stop
+                    currentScore--;
+                }
+                String updatedScore = String.valueOf(currentScore);
+                runningScoreDisp.setText(updatedScore);
             }
 
             @Override
@@ -663,7 +698,7 @@ public class MainActivity extends AppCompatActivity {
         timer.start();
     }
 
-    private void stopTimer() {
+    public void stopTimer() {
         if (timer != null) {
             timer.cancel();
         }
@@ -748,6 +783,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 
 }
