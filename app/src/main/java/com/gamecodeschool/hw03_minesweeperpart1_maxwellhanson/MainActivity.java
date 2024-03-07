@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements NewGameListenerIn
     public TextView userCountDisplay = null;
     public TextView rank1 = null;
     private boolean gameFinished = false;
+    private boolean gameWon = false;
     public int rowSize = 10;
     public int colSize = 10;
     public int mineCount = 20;
@@ -285,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements NewGameListenerIn
 
                         if(cell.hasMine()) { // IF USER ENDS THE GAME ---------------------------------------------------------------------
 //                            Log.d("UNFLAGGED MINES:",unflaggedMinesMap.entrySet().toString());//                            Log.d("Flagged were:", flaggedBtnList.toString());
-                            gameFinished = true;
+                            gameFinished = true;gameWon = false;currentScore = 0; runningScoreDisp.setText("0");
                             stopTimer();
                             for(Button btn : btnList){ /// loop sets all buttons to disabled
                                 btn.setEnabled(false);
@@ -353,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements NewGameListenerIn
                             button.setBackgroundColor(Color.GRAY);
                             if(unflaggedMinesMap.size() == 0 && checkWin()){//if all the mine cells have been flagged and if all the cells without mines have been revealed
                                 newGameButton.setBackgroundColor(Color.GREEN);
-                                stopTimer(); gameFinished = true;
+                                stopTimer(); gameFinished = true; gameWon=true;
                                 for(Button btn : btnList){ /// loop sets all buttons to disabled
                                     btn.setEnabled(false);
                                 }
@@ -441,8 +442,8 @@ public class MainActivity extends AppCompatActivity implements NewGameListenerIn
                     boxMsg.show(getSupportFragmentManager(),
                             "newGameDialog");
                 }
-                else { //if the game is finished, stop the timer. for now we are going to stop the pressedNewGame method until we can add it to the okay button aon the dialog (probs need another interface similar to newgamelistener)
-//                    pressedNewGame();
+                else { //if the game is finished, stop the timer. create a User Session object to send to the score board manager in DialogShowScores class
+
                     stopTimer();
                     user = new UserSession("???",currentScore);//Create the UserSession, set the user's score
                     // Display the score dialog
@@ -530,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements NewGameListenerIn
 
 
     public void pressedNewGame(){
-        gameFinished = false;
+        gameFinished = false;gameWon=false;
         setContentView(R.layout.activity_main);
         setInitVars();
         initializeMineField();
