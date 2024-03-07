@@ -84,7 +84,8 @@
                 android:layout_width="75dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="---" />
+                android:text="---"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/scoreDisp1"
@@ -110,7 +111,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="---" />
+                android:text="---"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/scoreDisp2"
@@ -136,7 +138,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="---" />
+                android:text="---"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/scoreDisp3"
@@ -163,7 +166,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="---" />
+                android:text="---"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/scoreDisp4"
@@ -189,7 +193,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="---" />
+                android:text="---"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/scoreDisp5"
@@ -225,5 +230,16 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/nameInput" />
+
+    <TextView
+        android:id="@+id/userPromptRed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="36dp"
+        android:text="Enter Name:"
+        android:textColor="#FF0000"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

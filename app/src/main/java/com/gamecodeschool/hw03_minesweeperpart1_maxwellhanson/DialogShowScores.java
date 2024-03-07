@@ -3,6 +3,7 @@ package com.gamecodeschool.hw03_minesweeperpart1_maxwellhanson;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -42,60 +43,72 @@ public class DialogShowScores extends DialogFragment {
         TextView score3 = dialogView.findViewById(R.id.scoreDisp3);
         TextView score4 = dialogView.findViewById(R.id.scoreDisp4);
         TextView score5 = dialogView.findViewById(R.id.scoreDisp5);
-
-        setTextViewsForTop5List(rank1, rank2, rank3, rank4, rank5, score1, score2, score3, score4, score5);//set textview text for null spots
+        TextView userPromptRed = dialogView.findViewById(R.id.userPromptRed);
 
         updateTop5List(score1,score2,score3,score4,score5,rank1, rank2, rank3, rank4, rank5);
 
 
 
 
+
         EditText nameInput = dialogView.findViewById(R.id.nameInput);
+        if(getUserRankInTop5List(user) == -1) { //if the user didnt make the top 5, hide the input and prompt
+            nameInput.setVisibility(View.GONE); userPromptRed.setVisibility(View.GONE);
+        }        else
+        {
+            nameInput.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
 
-        nameInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String userName = s.toString();
-                user.setUsername(userName);
-                int userRank = getUserRankInTop5List(user);
-                if (userRank != -1) {
-                    switch (userRank) {
-                        case 0:
-                            rank1.setText(s.toString());
-                            break;
-                        case 1:
-                            rank2.setText(s.toString());
-                            break;
-                        case 2:
-                            rank3.setText(s.toString());
-                            break;
-                        case 3:
-                            rank4.setText(s.toString());
-                            break;
-                        case 4:
-                            rank5.setText(s.toString());
-                            break;
+                    String userName = s.toString();
+                    user.setUsername(userName);
+                    int userRank = getUserRankInTop5List(user);
+                    if (userRank != -1) {
+                        switch (userRank) {
+                            case 0:
+                                rank1.setText(s.toString());
+                                rank1.setTextColor(Color.RED);
+                                break;
+                            case 1:
+                                rank2.setText(s.toString());
+                                rank2.setTextColor(Color.RED);
+                                break;
+                            case 2:
+                                rank3.setText(s.toString());
+                                rank3.setTextColor(Color.RED);
+                                break;
+                            case 3:
+                                rank4.setText(s.toString());
+                                rank4.setTextColor(Color.RED);
+                                break;
+                            case 4:
+                                rank5.setText(s.toString());
+                                rank5.setTextColor(Color.RED);
+                                break;
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            });
+        }
 
 
         Button btnOK = dialogView.findViewById(R.id.btnOK);
         btnOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 // Start a new game or perform any other actions upon clicking OK
                 // For now, let's assume you have a method to start a new game called startNewGame()
                 ((MainActivity) requireActivity()).pressedNewGame();
+
                 dismiss(); // Close the dialog after performing the action
             }
         });
@@ -109,36 +122,7 @@ public class DialogShowScores extends DialogFragment {
 
     }
 
-    private void setTextViewsForTop5List(TextView rank1, TextView rank2, TextView rank3, TextView rank4, TextView rank5,
-                                         TextView score1, TextView score2, TextView score3, TextView score4, TextView score5) {
-        for (int i = 0; i < top5List.length; i++) {
-            if (top5List[i] == null) {
-                switch (i) {
-                    case 0:
-                        rank1.setText("???");
-                        score1.setText("000");
-                        break;
-                    case 1:
-                        rank2.setText("???");
-                        score2.setText("000");
-                        break;
-                    case 2:
-                        rank3.setText("???");
-                        score3.setText("000");
-                        break;
-                    case 3:
-                        rank4.setText("???");
-                        score4.setText("000");
-                        break;
-                    case 4:
-                        rank5.setText("???");
-                        score5.setText("000");
-                        break;
-                }
-            }
-        }
 
-}
 
 
     private void updateTop5List(TextView score1, TextView score2, TextView score3, TextView score4, TextView score5, TextView rank1, TextView rank2, TextView rank3, TextView rank4, TextView rank5) {
@@ -165,11 +149,61 @@ public class DialogShowScores extends DialogFragment {
         score3.setText(top5List[2] != null ? String.valueOf(top5List[2].getScore()) : "000");
         score4.setText(top5List[3] != null ? String.valueOf(top5List[3].getScore()) : "000");
         score5.setText(top5List[4] != null ? String.valueOf(top5List[4].getScore()) : "000");
-        rank1.setText(top5List[0] != null ? top5List[0].getUsername() : "???");
-        rank2.setText(top5List[1] != null ? top5List[1].getUsername() : "???");
-        rank3.setText(top5List[2] != null ? top5List[2].getUsername() : "???");
-        rank4.setText(top5List[3] != null ? top5List[3].getUsername() : "???");
-        rank5.setText(top5List[4] != null ? top5List[4].getUsername() : "???");
+        // Set the text color of all rank TextViews to black
+        rank1.setTextColor(Color.BLACK);
+        rank2.setTextColor(Color.BLACK);
+        rank3.setTextColor(Color.BLACK);
+        rank4.setTextColor(Color.BLACK);
+        rank5.setTextColor(Color.BLACK);
+
+
+
+        for (int i = 0; i < top5List.length; i++) {
+            if (top5List[i] != null) {
+                switch (i) {
+                    case 0:
+                        rank1.setText(top5List[i].getUsername());
+                        if (user.equals(top5List[i])) rank1.setTextColor(Color.RED);
+                        break;
+                    case 1:
+                        rank2.setText(top5List[i].getUsername());
+                        if (user.equals(top5List[i])) rank2.setTextColor(Color.RED);
+                        break;
+                    case 2:
+                        rank3.setText(top5List[i].getUsername());
+                        if (user.equals(top5List[i])) rank3.setTextColor(Color.RED);
+                        break;
+                    case 3:
+                        rank4.setText(top5List[i].getUsername());
+                        if (user.equals(top5List[i])) rank4.setTextColor(Color.RED);
+                        break;
+                    case 4:
+                        rank5.setText(top5List[i].getUsername());
+                        if (user.equals(top5List[i])) rank5.setTextColor(Color.RED);
+                        break;
+                }
+            } else {
+                // Set the rank TextViews to "???" if the corresponding user is null
+                switch (i) {
+                    case 0:
+                        rank1.setText("???");
+                        break;
+                    case 1:
+                        rank2.setText("???");
+                        break;
+                    case 2:
+                        rank3.setText("???");
+                        break;
+                    case 3:
+                        rank4.setText("???");
+                        break;
+                    case 4:
+                        rank5.setText("???");
+                        break;
+                }
+            }
+        }
+
 
     }
 
